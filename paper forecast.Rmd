@@ -1,0 +1,111 @@
+---
+title: "Research data"
+author: "Rajshree"
+date: "2023-12-16"
+output: html_document
+---
+
+```{r}
+library(readxl)
+library(urca)
+library(vars)
+library(tseries)
+library(forecast)
+library(TSstudio)
+library(dplyr)
+
+```
+
+
+Importing data set
+```{r}
+data <- read_excel("Base Sem-1/Economectrics/research_data.xls", 
+    sheet = "Sheet1")
+View(data)
+str(data)
+
+```
+converting variable into time series data.
+```{r}
+gdp=ts(data$`GDP Growth rate%`, start=c(1985,1), frequency=12)
+expen=ts(data$`Capital Expenditure Growth Rate%`, start=c(1985,1), frequency=12)
+
+```
+
+Plotting the variable
+```{r}
+plot(gdp)
+plot(expen)
+```
+Check for stationarity for gdp variable
+```{r}
+adf.test(gdp)
+```
+
+```{r}
+Gdp1<-diff(gdp)
+plot(diff(gdp))
+adf.test(Gdp1)
+
+```
+
+
+```{r}
+result1 <- lm(`GDP Growth rate%` ~ `Capital Expenditure Growth Rate%`, data = data)
+summary(result1)
+```
+
+
+```{r}
+adf.test(expen)
+plot(expen)
+
+```
+
+
+```{r}
+adf1<- ur.df(gdp, type="trend", selectlags = "AIC")
+adf1
+summary(adf1)
+adf2<- ur.df(expen, type="trend", selectlags = "AIC")
+adf2
+summary(adf2)
+```
+
+```{r}
+vardata<- data.frame(gdp,expen)
+vardata
+```
+
+```{r}
+varlags<- VARselect(vardata, lag.max=12)
+varlags
+varlags$selection
+
+
+```
+
+```{r}
+varmodel<- VAR(vardata, p=2, type="both")
+summary(varmodel)
+```
+
+
+```{r}
+vpredict= predict(varmodel, n.head=10, ci=0.95)
+vpredict
+plot(vpredict)
+fanchart(vpredict)
+```
+
+```{r}
+irf2<- irf(varmodel, impulse="gdp", response="expen", n.ahead=10)
+plot(irf2)
+irf3<- irf(varmodel, impulse="expen", response="gdp", n.ahead=10)
+plot(irf3)
+```
+
+
+
+
+
